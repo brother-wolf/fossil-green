@@ -1,12 +1,7 @@
-
-extern crate rusoto_core;
-extern crate rusoto_credential;
 extern crate rusoto_ce;
 extern crate serde_json;
 extern crate serde;
 
-
-pub mod aws;
 use ::rusoto_ce::{CostExplorer,GetCostAndUsageRequest,DateInterval,GroupDefinition,ResultByTime, Group};
 use structopt::StructOpt;
 // use itertools::Itertools;
@@ -69,7 +64,6 @@ fn get_results_time(result_by_time: &ResultByTime) -> String {
 }
 
 fn main() {
-    use aws::get_client;
     let opt = Opt::from_args();
     // let title = if opt.name.is_empty() { opt.aws_profile.clone() } else { opt.name };
     
@@ -79,7 +73,7 @@ fn main() {
     let start_date = opt.start;
     let end_date = opt.end;
 
-    match get_client(&opt.aws_profile) {
+    match aws_connections_lib::cost_explorer::get_client(&opt.aws_profile) {
         
         Some(client) => {
             let interval = DateInterval {
