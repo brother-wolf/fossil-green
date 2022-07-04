@@ -74,7 +74,7 @@ fn main() {
     let start_date = opt.start;
     let end_date = opt.end;
 
-    let mut rt = Runtime::new().unwrap();
+    let rt = Runtime::new().unwrap();
 
     match aws_connections_lib::cost_explorer::get_client(&opt.aws_profile, "us-east-1") {
         
