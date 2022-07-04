@@ -7,6 +7,7 @@ use structopt::StructOpt;
 // use itertools::Itertools;
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use tokio::runtime::Runtime;
 // use serde_json::Result;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -73,9 +74,11 @@ fn main() {
     let start_date = opt.start;
     let end_date = opt.end;
 
-    match aws_connections_lib::cost_explorer::get_client(&opt.aws_profile) {
+    let mut rt = Runtime::new().unwrap();
+
+    match aws_connections_lib::cost_explorer::get_client(&opt.aws_profile, "us-east-1") {
         
-        Some(client) => {
+        Ok(client) => {
             let interval = DateInterval {
                 start: start_date,
                 end: end_date,
@@ -89,10 +92,11 @@ fn main() {
                 granularity: Some("MONTHLY".to_string()), 
                 metrics: Some(metrics), 
                 next_page_token: None, 
-                time_period: Some(interval), 
+                time_period: interval,
             };
 
-            let mut costs_by_region = match client.get_cost_and_usage(cost_and_usage_request).sync() {
+            let mut costs_by_region = match rt.block_on(async { client.get_cost_and_usage(cost_and_usage_request).await }){
+            // let mut costs_by_region = match client.get_cost_and_usage(cost_and_usage_request).sync() {
                 Err(_e) => {
                     println!("{:?}", _e);
                     vec![]
@@ -149,6 +153,6 @@ fn main() {
             };
             println!("{:?}", &json);
         },
-        None => println!("unable to establish credentials"),
+        Err(e) => println!("unable to establish credentials, {}", e.message),
     };
 }
